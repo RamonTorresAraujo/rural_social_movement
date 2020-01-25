@@ -8,7 +8,7 @@ itertools, gensim, and so on.
 
 # Main research question:
 
-What are the main problems and theories about rural social movements in Brazil?
+What are the main subjects treated in articles about rural social movements in Brazil?
 
 # Work steps:
 
