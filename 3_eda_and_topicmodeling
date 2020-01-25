@@ -1,0 +1,198 @@
+# EDA and Topic Modeling 
+#########################
+
+# creating a list of journals
+
+print(len(corpus['journals'].value_counts()))
+print(corpus['journals'].value_counts())
+
+# counting the number of articles per year
+
+corpus['years'].value_counts(sort=False)
+
+# counting the number of social movements organizations
+
+smo = corpus['smo'].value_counts()
+
+print(smo)
+print(round(smo/135, 2))
+
+# count the frenquency of words
+
+words_list = []
+words_list_2005_2009 = []
+words_list_2010_2014 = []
+words_list_2015_2019 = []
+
+for i,l in enumerate(data_words):
+    for w in l:
+        words_list.append(w)
+        if (corpus.iloc[i]['years'] == 2005) or (corpus.iloc[i]['years'] == 2006) or (corpus.iloc[i]['years'] == 2007) or (corpus.iloc[i]['years'] == 2008) or (corpus.iloc[i]['years'] == 2009):
+            words_list_2005_2009.append(w)
+        if (corpus.iloc[i]['years'] == 2010) or (corpus.iloc[i]['years'] == 2011) or (corpus.iloc[i]['years'] == 2012) or (corpus.iloc[i]['years'] == 2013) or (corpus.iloc[i]['years'] == 2014):
+            words_list_2010_2014.append(w)
+        if (corpus.iloc[i]['years'] == 2015) or (corpus.iloc[i]['years'] == 2016) or (corpus.iloc[i]['years'] == 2017) or (corpus.iloc[i]['years'] == 2018) or (corpus.iloc[i]['years'] == 2019):
+            words_list_2015_2019.append(w)
+        
+freq = Counter(words_list)
+words_freq = {k: v for k, v in sorted(freq.items(), key=lambda item: item[1], reverse=True)}
+
+freq_2005_2009 = Counter(words_list_2005_2009)
+words_freq_2005_2009 = {k: v for k, v in sorted(freq_2005_2009.items(), key=lambda item: item[1], reverse=True)}
+
+freq_2010_2014 = Counter(words_list_2010_2014)
+words_freq_2010_2014 = {k: v for k, v in sorted(freq_2010_2014.items(), key=lambda item: item[1], reverse=True)}
+
+freq_2015_2019 = Counter(words_list_2015_2019)
+words_freq_2015_2019 = {k: v for k, v in sorted(freq_2015_2019.items(), key=lambda item: item[1], reverse=True)}
+
+# count the frenquency of roots/words
+
+roots_list = []
+roots_list_2005_2009 = []
+roots_list_2010_2014 = []
+roots_list_2015_2019 = []
+
+for i,l in enumerate(data_roots):
+    for w in l:
+        roots_list.append(w)
+        if (corpus.iloc[i]['years'] == 2005) or (corpus.iloc[i]['years'] == 2006) or (corpus.iloc[i]['years'] == 2007) or (corpus.iloc[i]['years'] == 2008) or (corpus.iloc[i]['years'] == 2009):
+            roots_list_2005_2009.append(w)
+        if (corpus.iloc[i]['years'] == 2010) or (corpus.iloc[i]['years'] == 2011) or (corpus.iloc[i]['years'] == 2012) or (corpus.iloc[i]['years'] == 2013) or (corpus.iloc[i]['years'] == 2014):
+            roots_list_2010_2014.append(w)
+        if (corpus.iloc[i]['years'] == 2015) or (corpus.iloc[i]['years'] == 2016) or (corpus.iloc[i]['years'] == 2017) or (corpus.iloc[i]['years'] == 2018) or (corpus.iloc[i]['years'] == 2019):
+            roots_list_2015_2019.append(w)
+        
+freq = Counter(roots_list)
+roots_freq = {k: v for k, v in sorted(freq.items(), key=lambda item: item[1], reverse=True)}
+
+freq_2005_2009 = Counter(roots_list_2005_2009)
+roots_freq_2005_2009 = {k: v for k, v in sorted(freq_2005_2009.items(), key=lambda item: item[1], reverse=True)}
+
+freq_2010_2014 = Counter(roots_list_2010_2014)
+roots_freq_2010_2014 = {k: v for k, v in sorted(freq_2010_2014.items(), key=lambda item: item[1], reverse=True)}
+
+freq_2015_2019 = Counter(roots_list_2015_2019)
+roots_freq_2015_2019 = {k: v for k, v in sorted(freq_2015_2019.items(), key=lambda item: item[1], reverse=True)}
+
+# remove duplicates to count the words' proportion
+
+words_not_dup = []
+roots_not_dup = []
+
+for i in range(len(data_words)):
+    words_not_dup.append(list(set(data_words[i]))) 
+    roots_not_dup.append(list(set(data_roots[i])))
+    
+# count the proportion of words per abstracts
+
+words_list = []
+roots_list = []
+
+for l in words_not_dup:
+    for w in l:
+        words_list.append(w)
+        
+for l in roots_not_dup:
+    for r in l:
+        roots_list.append(r)
+    
+freq = Counter(words_list)
+words_f_p = {k: v for k, v in sorted(freq.items(), key=lambda item: item[1], reverse=True)}
+
+freq = Counter(roots_list)
+roots_f_p = {k: v for k, v in sorted(freq.items(), key=lambda item: item[1], reverse=True)}
+    
+words_prop = {k: round(v/135, 2) for k, v in words_f_p.items()}
+roots_prop = {k: round(v/135, 2) for k, v in roots_f_p.items()}
+
+# creating a list with words/roots should be removed 
+
+remove_words = [k for (k,v) in words_prop.items() if v > 0.1]
+remove_roots = [k for (k,v) in roots_prop.items() if v > 0.1]
+
+# removing words/roots from data_words and data_roots
+
+for i,l in enumerate(data_words):
+    for w in l:
+        if w in remove_words:
+            l = list(filter((w).__ne__, l))
+    data_words[i] = l
+    
+for i,l in enumerate(data_roots):
+    for w in l:
+        if w in remove_roots:
+            l = list(filter((w).__ne__, l))
+    data_roots[i] = l
+    
+from gensim import corpora
+import gensim
+import pickle
+
+# creating a dict and a corpus of words 
+
+dict_words = corpora.Dictionary(data_words)
+corpus_words = [dict_words.doc2bow(doc) for doc in data_words]
+
+# creating a dict and a corpus of roots 
+
+dict_roots = corpora.Dictionary(data_roots)
+corpus_roots = [dict_roots.doc2bow(doc) for doc in data_roots]
+
+### WORDS
+
+# running a model with 5 topics and 15 passes
+
+words_model5 = gensim.models.LdaMulticore(corpus_words, num_topics = 5, id2word = dict_words, passes = 15)
+
+topics = words_model5.print_topics(num_words=7)
+for topic in topics:
+    print(topic)
+    print('\n')
+    
+# running a model with 6 topics and 15 passes
+
+words_model6 = gensim.models.LdaMulticore(corpus_words, num_topics = 6, id2word = dict_words, passes = 15)
+
+topics = words_model6.print_topics(num_words=7)
+for topic in topics:
+    print(topic)
+    print('\n')
+    
+# running a model with 7 topics and 15 passes
+
+words_model7 = gensim.models.LdaMulticore(corpus_words, num_topics = 7, id2word = dict_words, passes = 15)
+
+topics = words_model7.print_topics(num_words=7)
+for topic in topics:
+    print(topic)
+    print('\n')
+    
+### ROOTS    
+    
+# running a model with 5 topics and 15 passes
+
+roots_model5 = gensim.models.LdaMulticore(corpus_roots, num_topics = 5, id2word = dict_roots, passes = 15)
+
+topics = roots_model5.print_topics(num_words=7)
+for topic in topics:
+    print(topic)
+    print('\n')
+    
+# running a model with 6 topics and 15 passes
+
+roots_model6 = gensim.models.LdaMulticore(corpus_roots, num_topics = 6, id2word = dict_roots, passes = 15)
+
+topics = roots_model6.print_topics(num_words=7)
+for topic in topics:
+    print(topic)
+    print('\n')
+    
+# running a model with 7 topics and 15 passes
+
+roots_model7 = gensim.models.LdaMulticore(corpus_roots, num_topics = 7, id2word = dict_roots, passes = 15)
+
+topics = roots_model7.print_topics(num_words=7)
+for topic in topics:
+    print(topic)
+    print('\n')
