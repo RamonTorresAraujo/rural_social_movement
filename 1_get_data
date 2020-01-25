@@ -1,0 +1,152 @@
+# Get data
+##########
+
+from bs4 import BeautifulSoup as soup, SoupStrainer as strainer
+from urllib.request import urlopen as uReq
+
+# scraping articles with 'movimento(s)', 'conflito(s)', and 'ativismo(s)'
+
+titles_l = []
+urls_l = []
+authors_l = []
+journals_l = []
+years_l = []
+abstracts_l = []
+
+for i in range(1, 102):
+    number = 1 + (i - 1) * 50
+    url = 'https://search.scielo.org/?fb=&q=movimento+OR+movimentos+OR+conflito+OR+conflitos+OR+ativismo+OR+ativismos&lang=en&count=50&from=' + str(number) + '&output=site&sort=&format=summary&page=' + str(i) + '&where=&filter%5Bin%5D%5B%5D=scl&filter%5Byear_cluster%5D%5B%5D=2018&filter%5Byear_cluster%5D%5B%5D=2019&filter%5Byear_cluster%5D%5B%5D=2016&filter%5Byear_cluster%5D%5B%5D=2017&filter%5Byear_cluster%5D%5B%5D=2015&filter%5Byear_cluster%5D%5B%5D=2013&filter%5Byear_cluster%5D%5B%5D=2014&filter%5Byear_cluster%5D%5B%5D=2012&filter%5Byear_cluster%5D%5B%5D=2011&filter%5Byear_cluster%5D%5B%5D=2010&filter%5Byear_cluster%5D%5B%5D=2009&filter%5Byear_cluster%5D%5B%5D=2008&filter%5Byear_cluster%5D%5B%5D=2007&filter%5Byear_cluster%5D%5B%5D=2006&filter%5Byear_cluster%5D%5B%5D=2005&filter%5Bsubject_area%5D%5B%5D=Human+Sciences&filter%5Bsubject_area%5D%5B%5D=Applied+Social+Sciences&filter%5Btype%5D%5B%5D=research-article'
+    page = uReq(url)
+    page_soup = soup(page, 'html.parser')
+
+    # titles
+
+    t_l = []
+    titles = page_soup.find_all('strong', {'class':'title'})
+    for a in titles:
+        t_l.append(a.text)
+    
+    titles_l.extend(t_l)
+    
+    if len(t_l) != 50:
+        print(['title', i])
+
+    # urls
+
+    u_l = []
+    urls = page_soup.find_all('a', {'class':'articleAction shareFacebook'})
+    for a in urls:
+        u_l.append(a.get('href'))
+        
+    urls_l.extend(u_l)
+
+    if len(u_l) != 50:
+        print(['url', i])
+
+    # authors
+
+    au_l = []
+    authors = page_soup.find_all('div', {'class':'line authors'})
+    for a in authors:
+        au_l.append(a.text.strip())
+
+    authors_l.extend(au_l)
+    
+    if len(au_l) != 50:
+        print(['authors', i])
+
+    # sources (journals and years)
+
+    s_l = []
+    sources = page_soup.find_all('div', {'class':'line source'})
+    for a in sources:
+        s_l.append(a)
+
+    if len(s_l) != 50:
+        print(['source', i])
+
+    # journals
+
+    j_l = []
+    for s in s_l:
+        source = s.text.strip().split('\n')
+        journals = source[0]
+        j_l.append(journals)
+        
+    journals_l.extend(j_l)
+
+    if len(j_l) != 50:
+        print(['journal', i])
+
+    # years
+
+    years = ['2019', '2018', '2017', '2016', '2015', '2014', '2013', '2012', '2011', '2010', 
+             '2009', '2008', '2007', '2006', '2005', '2004', '2003', '2002', '2001', '2000', 
+             '1999', '1998', '1997', '1996', '1995', '1994', '1993', '1992', '1991', '1990']
+
+    y_l = []
+    for s in s_l:
+        source = s.text.strip().split('\n')
+        for y in source:
+            year = y.strip().replace(',', '').replace('.', '')
+            if year in years:
+                y_l.append(year)
+    
+    years_l.extend(y_l)
+    
+    if len(y_l) != 50:
+        print(['year', i])
+
+    # abstracts
+
+    ab_l = []
+    abstracts = page_soup.find_all('div', {'class':'abstract'})
+    for a in abstracts:
+        if 'scl_pt' in str(a):
+            ab_l.append(a.text.strip())
+            
+    abstracts_l.extend(ab_l)
+
+    if len(ab_l) != 50:
+        print(['abstract', i])
+        
+print(len(titles_l)) # 5050
+print(len(urls_l)) # 5050
+print(len(authors_l)) # 5050
+print(len(journals_l)) # 5050
+print(len(years_l)) # 5050
+print(len(abstracts_l)) # 5050
+
+# selecting abstracts with the following words: 'rura', 'campo', 'agr', 'terra'
+
+titles = []
+urls = []
+authors = []
+journals = []
+years = []
+abstracts = []
+
+for i,abstract in enumerate(abstracts_l):
+    if ('rura' in abstract.lower()) or ('campo' in abstract.lower()) or ('agr' in abstract.lower()) or ('terra' in abstract.lower()):
+        titles.append(titles_l[i])
+        urls.append(urls_l[i])
+        authors.append(authors_l[i])
+        journals.append(journals_l[i])
+        years.append(years_l[i])
+        abstracts.append(abstracts_l[i])
+        
+print(len(titles)) # 1269
+print(len(urls)) # 1269
+print(len(authors)) # 1269
+print(len(journals)) # 1269
+print(len(years)) # 1269
+print(len(abstracts)) # 1269
+
+import pandas as pd
+
+articles = pd.DataFrame({'titles': titles,
+                         'urls': urls,
+                         'authors': authors,
+                         'journals':journals,
+                         'years': years,
+                         'abstracts': abstracts})
