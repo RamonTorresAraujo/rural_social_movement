@@ -2,3 +2,233 @@ from collections import Counter
 import spacy # spacy is a module to treat (token) text (nlp)
 nlp = spacy.load('pt')
 
+# importing data
+
+corpus = pd.read_csv('corpus.csv')
+
+# converting abstracts column into a list
+
+abstracts = corpus['abstracts'].to_list()
+
+# changing characteres, remove 'estado' (different from 'Estado') and convert all characteres to lower case
+
+data = []
+
+for i in range(len(abstracts)):
+    abstracts[i] = abstracts[i].replace(',','').replace('.','').replace('-',' ').replace('(','').replace(')','').replace(':','').replace('"','').replace(';','').replace('/',' ').replace('“','').replace('”','').replace("'",'').replace('?','').replace('‘','').replace('’','').replace('¹','').replace('´','') 
+    abstracts[i] = abstracts[i].split()
+    abstracts[i] = ' '.join([word.lower() for word in abstracts[i] if (word != 'estado') and (word != 'estados')])
+    doc = nlp(abstracts[i])
+    data.append(doc)
+    
+# creating a list with gramma types and another list with words
+
+data_gramma = []
+data_words = []
+
+for abstract in data:
+    gramma_list = [token.pos_ for token in abstract if not token.is_punct]
+    words_list = [token.orth_ for token in abstract if not token.is_punct]
+    data_gramma.append(gramma_list)
+    data_words.append(words_list)
+    
+# changing words automatically
+
+word_2_l = ['reforma agrária', 'são paulo', 'pequenos produtores', 'agricultura familiar', 'agricultores familiares',
+            'educação popular', 'entrevistas semiestruturadas', 'igreja católica', 'movimento agroecológico', 
+            'direitos humanos', 'mulheres camponesas', 'pesquisa bibliográfica', 'sociedade civil', 'meio ambiente', 
+            'movimento camponês', 'observação participante', 'agricultura orgânica', 'assistência técnica', 
+            'sem terra', 'política pública', 'políticas públicas', 'pequenos agricultores', 'recursos naturais',
+            'organizações locais', 'desenvolvimento local', 'governo lula', 'desenvolvimento sustentável', 'minas gerais',
+            'atenção básica', 'américa latina', 'práxis militante', 'santa catarina', 'relatos orais', 'revisão bibliográfica',
+            'alimento saudável', 'faixa etária', 'land reform', 'leonel brizola', 'revolução verde']
+
+word_3_l = ['movimentos sociais rurais', 'educação do campo', 'educação em sexualidade',
+            'pontal do paranapanema', 'quebradeiras de coco', 'fernando henrique cardoso', 'áfrica do sul',
+            'direito à terra', 'movimentos sociais populares', 'relações de gênero', 'direito à educação', 
+            'trabalho de campo', 'guerra do contestado'] 
+
+word_4_l = ['movimentos sociais do campo', 'rio grande do sul', 'movimento de mulheres camponesas',
+            'rio grande do norte', 'movimento dos sem terra', 'landless people s movement'] 
+
+word_5_l = ['movimento da educação do campo', 'movimento de educação do campo', 'movimento dos trabalhadores sem terra']
+
+word_6_l = ['movimento dos trabalhadores rurais sem terra']
+
+word_8_l = ['movimento de mulheres trabalhadores rurais do sertão central']
+
+for n,l in enumerate(data_words):
+    for i in range(len(l)):
+        try:
+            word_8 = l[i-7] + ' ' + l[i-6] + ' ' + l[i-5] + ' ' + l[i-4] + ' ' + l[i-3] + ' ' + l[i -2] + ' ' + l[i-1] + ' ' + l[i]
+            if word_8 in word_8_l:
+                l[i] = word_8
+                del l[i-1]
+                del l[i-2]
+                del l[i-3]
+                del l[i-4]
+                del l[i-5]
+                data_gramma[n][i] = 'SPECIAL'
+                del data_gramma[n][i-1]
+                del data_gramma[n][i-2]
+                del data_gramma[n][i-3]
+                del data_gramma[n][i-4]
+                del data_gramma[n][i-5]
+            word_6 = l[i-5] + ' ' + l[i-4] + ' ' + l[i-3] + ' ' + l[i -2] + ' ' + l[i-1] + ' ' + l[i]
+            if word_6 in word_6_l:
+                l[i] = 'mst'
+                del l[i-1]
+                del l[i-2]
+                del l[i-3]
+                del l[i-4]
+                del l[i-5]
+                data_gramma[n][i] = 'SPECIAL'
+                del data_gramma[n][i-1]
+                del data_gramma[n][i-2]
+                del data_gramma[n][i-3]
+                del data_gramma[n][i-4]
+                del data_gramma[n][i-5]
+                
+            word_5 = l[i-4] + ' ' + l[i-3] + ' ' + l[i-2] + ' ' + l[i-1] + ' ' + l[i]
+            if word_5 in word_5_l:
+                if (word_5 == 'movimento da educação do campo') or (word_5 == 'movimento de educação do campo'):
+                    l[i] = 'mec'
+                    del l[i-1]
+                    del l[i-2]
+                    del l[i-3]
+                    del l[i-4]
+                    data_gramma[n][i] = 'SPECIAL'
+                    del data_gramma[n][i-1]
+                    del data_gramma[n][i-2]
+                    del data_gramma[n][i-3]
+                    del data_gramma[n][i-4]        
+                if word_5 == 'movimento dos trabalhadores sem terra':
+                    l[i] = 'mst'
+                    del l[i-1]
+                    del l[i-2]
+                    del l[i-3]
+                    del l[i-4]
+                    data_gramma[n][i] = 'SPECIAL'
+                    del data_gramma[n][i-1]
+                    del data_gramma[n][i-2]
+                    del data_gramma[n][i-3]
+                    del data_gramma[n][i-4]
+         
+            word_4 = l[i-3] + ' ' + l[i-2] + ' ' + l[i-1] + ' ' + l[i]
+            if word_4 in word_4_l:
+                if word_4 == 'movimento de mulheres camponesas':
+                    l[i] = 'mmc'
+                    del l[i-1]
+                    del l[i-2]
+                    del l[i-3]
+                    data_gramma[n][i] = 'SPECIAL'
+                    del data_gramma[n][i-1]
+                    del data_gramma[n][i-2]
+                    del data_gramma[n][i-3]
+                elif word_4 == 'movimento dos sem terra':
+                    l[i] = 'mst'
+                    del l[i-1]
+                    del l[i-2]
+                    del l[i-3]
+                    data_gramma[n][i] = 'SPECIAL'
+                    del data_gramma[n][i-1]
+                    del data_gramma[n][i-2]
+                    del data_gramma[n][i-3]
+                elif word_4 == 'landless people s movement':
+                    l[i] = 'lpm'
+                    del l[i-1]
+                    del l[i-2]
+                    del l[i-3]
+                    data_gramma[n][i] = 'SPECIAL'
+                    del data_gramma[n][i-1]
+                    del data_gramma[n][i-2]
+                    del data_gramma[n][i-3]    
+                else:
+                    l[i] = word_4
+                    del l[i-1]
+                    del l[i-2]
+                    del l[i-3]
+                    data_gramma[n][i] = 'SPECIAL'
+                    del data_gramma[n][i-1]
+                    del data_gramma[n][i-2]
+                    del data_gramma[n][i-3]
+
+            word_3 = l[i-2] + ' ' + l[i-1] + ' ' + l[i]
+            if word_3 in word_3_l:
+                l[i] = word_3
+                del l[i-1]
+                del l[i-2]
+                data_gramma[n][i] = 'SPECIAL'
+                del data_gramma[n][i-1]
+                del data_gramma[n][i-2]
+
+            word_2 = l[i-1] + ' ' + l[i]
+            if word_2 in word_2_l:
+                if word_2 == 'agricultores familiares':
+                    l[i] = 'agricultura familiar'
+                    del l[i-1]
+                    data_gramma[n][i] = 'SPECIAL'
+                    del data_gramma[n][i-1]
+                elif word_2 == 'políticas públicas':
+                    l[i] = 'política pública'
+                    del l[i-1]
+                    data_gramma[n][i] = 'SPECIAL'
+                    del data_gramma[n][i-1]
+                else:
+                    l[i] = word_2
+                    del l[i-1]
+                    data_gramma[n][i] = 'SPECIAL'
+                    del data_gramma[n][i-1]
+                           
+        except:
+            pass
+        
+    data_words[n] = l
+    
+# removing stop words based on gramma types
+
+for n,l in enumerate(data_gramma):
+    gramma = []
+    words = []
+    for i,t in enumerate(l):
+        if (t == 'SPACE') or (t == 'DET') or (t == 'PRON') or (t == 'ADP') or (t == 'NUM') or (t == 'CCONJ') or (t == 'SCONJ') or (t == 'PART'):  
+            continue
+        else:
+            gramma.append(data_gramma[n][i])
+            words.append(data_words[n][i])
+    data_gramma[n] = gramma
+    data_words[n] = words
+    
+import nltk  # nltk is a module to treat (token) text (nlp) 
+nltk.download('rslp') # rslp is a function to treat roots of words
+
+# creating a list with words' roots
+
+skip_word = ['reforma agrária', 'são paulo', 'pequenos produtores', 'agricultura familiar', 'agricultores familiares',
+            'educação popular', 'entrevistas semiestruturadas', 'igreja católica', 'movimento agroecológico', 
+            'assentamentos rurais', 'direitos humanos', 'mulheres camponesas', 'pesquisa bibliográfica', 'sociedade civil', 
+            'movimento camponês', 'observação participante', 'agricultura orgânica', 'assistência técnica', 'sem terra',
+            'assentamento rural', 'política pública', 'políticas públicas', 'pequenos agricultores', 'recursos naturais',
+            'organizações locais', 'desenvolvimento local', 'governo lula', 'desenvolvimento sustentável', 'minas gerais',
+            'atenção básica', 'américa latina', 'práxis militante', 'santa catarina', 'relatos orais', 'revisão bibliográfica',
+            'alimento saudável', 'faixa etária', 'land reform', 'leonel brizola', 'revolução verde', 'movimentos sociais rurais', 
+            'luta pela terra', 'educação do campo', 'educação em sexualidade', 'pontal do paranapanema', 
+            'quebradeiras de coco', 'fernando henrique cardoso', 'áfrica do sul', 'direito à terra', 
+            'movimentos sociais populares', 'relações de gênero', 'direito à educação', 'trabalho de campo', 
+            'guerra do contestado', 'movimentos sociais do campo', 'rio grande do sul', 
+            'movimento de mulheres camponesas', 'rio grande do norte', 'movimento dos sem terra', 
+            'landless people s movement', 'movimento da educação do campo', 'movimento dos trabalhadores sem terra',
+            'movimento dos trabalhadores rurais sem terra']
+
+data_roots = []
+
+stemmer = nltk.stem.RSLPStemmer()
+for i,l in enumerate(data_words):
+    words_root = []
+    for word in l:
+        if (word in skip_word) or (word in synonyms.keys()):
+            words_root.append(word)
+        else:    
+            root = stemmer.stem(word)
+            words_root.append(root)
+    data_roots.append(words_root)
