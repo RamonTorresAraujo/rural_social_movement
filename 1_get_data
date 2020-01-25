@@ -150,3 +150,7 @@ articles = pd.DataFrame({'titles': titles,
                          'journals':journals,
                          'years': years,
                          'abstracts': abstracts})
+
+# exporting corpus_rural 
+
+corpus.to_csv('corpus.csv', index=False)
