@@ -1,0 +1,4 @@
+from collections import Counter
+import spacy # spacy is a module to treat (token) text (nlp)
+nlp = spacy.load('pt')
+
